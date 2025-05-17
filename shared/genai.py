@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+import os
+from typing import Iterator
+
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+
+from .models import EvalResponse
+
+load_dotenv()
+client = genai.Client(api_key=os.getenv("API_KEY"))
+
+EVAL_SYSTEM_PROMPT = """
+You are an intelligent evaluation system whose task is to assess an AI assistant's answer.
+If the answer is very close to the ideal answer, assign a score of 1. If the answer is incorrect or not good enough, assign a score of 0.
+If the answer is partially aligned with the ideal answer, assign a score of 0.5. Briefly justify the score you assign.
+"""
+
+CONTEXT_SYSTEM_PROMPT = """
+I will ask you a question, and I want you to answer
+based only on the context I provide, and no other information.
+If there is not enough information in the context to answer the question,
+say "I don't know". Do not try to guess."""
+CONTEXT_PROMPT_TEMPLATE = """
+Context information is below.
+---------------------
+{context}
+---------------------
+Given the context information and not prior knowledge, answer the question below:
+{question}
+"""
+
+REFINED_QUESTION_SYSTEM_PROMPT = """You are a helpful, respectful and honest assistant."""
+REFINED_QUESTION_PROMPT_TEMPLATE = """
+Chat History:
+---------------------
+{chat_history}
+---------------------
+Follow Up Question: {question}
+Given the above conversation and a follow up question, rephrase the follow up question to be a standalone question.
+Standalone question:
+"""
+
+
+def create_embeddings(text: list[str], model="text-embedding-004"):
+    return client.models.embed_content(model=model, contents=text, config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"))
+
+
+def refined_question_response(question: str, chat_history: list[dict[str, str]], model="gemini-2.0-flash") -> types.GenerateContentResponse:
+    chat_history = "\n".join(f"{message['role']}: {message['content']}" for message in chat_history)
+
+    response = client.models.generate_content(
+        model=model,
+        config=types.GenerateContentConfig(
+            system_instruction=REFINED_QUESTION_SYSTEM_PROMPT,
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=512,
+        ),
+        contents=REFINED_QUESTION_PROMPT_TEMPLATE.format(chat_history=chat_history, question=question),
+    )
+    return response
+
+
+def context_aware_response(question: str, context: list[str], model="gemini-2.0-flash") -> types.GenerateContentResponse:
+    response = client.models.generate_content(
+        model=model,
+        config=types.GenerateContentConfig(
+            system_instruction=CONTEXT_SYSTEM_PROMPT,
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=512,
+        ),
+        contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
+    )
+    return response
+
+
+def context_aware_response_stream(question: str, context: list[str], model="gemini-2.0-flash") -> Iterator[types.GenerateContentResponse]:
+    stream = client.models.generate_content_stream(
+        model=model,
+        config=types.GenerateContentConfig(
+            system_instruction=CONTEXT_SYSTEM_PROMPT,
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=512,
+        ),
+        contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
+    )
+    return stream
+
+
+def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, model="gemini-2.0-flash") -> types.GenerateContentResponse:
+    response = client.models.generate_content(
+        model=model,
+        config=types.GenerateContentConfig(
+            system_instruction=EVAL_SYSTEM_PROMPT,
+            response_mime_type="application/json",
+            response_schema=EvalResponse,
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=512,
+        ),
+        contents=f"Question: {question}\nAI assistant's answer: {ai_answer}\nIdeal answer: {ideal_answer}",
+    )
+    return response

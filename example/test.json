@@ -1,0 +1,14 @@
+[
+    {
+        "question": "In what ways can artificial intelligence enhance the work of a pizza maker?",
+        "ideal_answer": "A linear regression model might enable the pizza maker to better estimate demand so he can optimize the restaurant’s staffing and supply chain, and better predict sales of Hawaiian pizza so he could make more Hawaiian pies in advance and reduce the amount of time customers had to wait for them."
+    },
+    {
+        "question": "What is RAG?",
+        "ideal_answer": "I don't know."
+    },
+    {
+        "question": "Who is Andrew NG?",
+        "ideal_answer":"Andrew NG is the founder of DeepLearning.AI"
+    }
+]

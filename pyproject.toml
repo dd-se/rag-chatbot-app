@@ -1,0 +1,20 @@
+[project]
+name = "rag-chatbot-cli"
+version = "1.0.0"
+description = "A Retrieval-Augmented Generation (RAG) chatbot and CLI for interactive document-based Q&A."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.0.9",
+    "google-genai>=1.14.0",
+    "numpy>=2.2.5",
+    "pydantic>=2.11.4",
+    "pypdf>=5.5.0",
+    "python-dotenv>=1.1.0",
+    "streamlit>=1.45.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+]
