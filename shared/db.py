@@ -44,7 +44,7 @@ def process_and_store_document_chunks(chunks: list[str], pdf_filename: str, doc_
     return doc_hash
 
 
-def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 5):
+def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 7):
     """Retrieves relevant document chunks having a specific hash"""
     where_clause = {"hash": doc_hash} if doc_hash else None
 
