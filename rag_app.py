@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 
 from shared import *
@@ -25,7 +24,7 @@ if "eval_results" not in st.session_state:
 
 
 @st.cache_data
-def display_chat_history(messages: list[str], noop: bool):
+def display_chat_history(messages: list[str], noop: bool = False):
     if noop:
         return
     for message in messages:
@@ -130,12 +129,12 @@ if prompt:
     # Refine user question using chat history as context
     if st.session_state.messages:
         refined_prompt = refined_question_response(prompt, st.session_state.messages).text
-
-    query_embedding = create_embeddings([locals().get("refined_prompt") or prompt]).embeddings[0].values
+    prompt_potentially_enhanced = locals().get("refined_prompt") or prompt
+    query_embedding = create_embeddings([prompt_potentially_enhanced]).embeddings[0].values
     top_chunks = get_relevant_context(query_embedding, doc_hash=st.session_state.doc_hash)["documents"][0]
 
     with st.chat_message("assistant"):
-        response = st.write_stream(chunk.text for chunk in context_aware_response_stream(prompt, top_chunks))
+        response = st.write_stream(chunk.text for chunk in context_aware_response_stream(prompt_potentially_enhanced, top_chunks))
 
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": prompt, "content_mod": prompt_potentially_enhanced})
     st.session_state.messages.append({"role": "assistant", "content": response})
