@@ -29,14 +29,14 @@ bg_img_url = "https://i.imgur.com/6yLAgLv.jpeg"
 css = f"""
     <style>
     .stChatMessage {{
-        background: #262730dd;
+        background: #262730ee;
         border-radius: 15px;
         padding: 16px;
     }}
    .stApp {{
         background-image: url("{bg_img_url}");
         background-size: cover;
-        background-position: right;
+        background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
 
