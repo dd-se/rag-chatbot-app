@@ -98,7 +98,7 @@ def context_aware_response_stream(question: str, context: list[str], model="gemi
     return stream
 
 
-def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, model="gemini-2.0-flash") -> types.GenerateContentResponse:
+def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, model="gemini-2.0-flash-lite") -> types.GenerateContentResponse:
     response = client.models.generate_content(
         model=model,
         config=types.GenerateContentConfig(
