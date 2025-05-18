@@ -8,7 +8,7 @@ class EvalResponse(BaseModel):
     evaluation: str
     context: str = Field(default=None, init=False)
     hash: str = Field(default=None, init=False)
-    score: int = Field(ge=0, le=1)
+    score: float = Field(ge=0, le=1)
 
 
 class QAItem(BaseModel):
