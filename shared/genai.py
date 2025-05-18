@@ -16,9 +16,14 @@ except KeyError:
 client = genai.Client(api_key=api_key)
 
 EVAL_SYSTEM_PROMPT = """
-You are an intelligent evaluation system whose task is to assess an AI assistant's answer.
-If the answer is very close to the ideal answer, assign a score of 1. If the answer is incorrect or not good enough, assign a score of 0.
-If the answer is partially aligned with the ideal answer, assign a score of 0.5. Briefly justify the score you assign.
+You are an impartial evaluation system. Your task is to assess the AI assistant's answer compared to the ideal answer.
+
+Scoring:
+- 1.0: The answer is very close to the ideal answer.
+- 0.5: The answer is partially correct or incomplete.
+- 0: The answer is incorrect or irrelevant.
+
+Assign only one of these scores (0, 0.5, or 1.0) and briefly justify your decision.
 """
 
 CONTEXT_SYSTEM_PROMPT = """
