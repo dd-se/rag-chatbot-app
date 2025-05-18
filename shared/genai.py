@@ -9,7 +9,11 @@ from google.genai import types
 from .models import EvalResponse
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("API_KEY"))
+try:
+    api_key = os.environ["GEMINI_API_KEY"]
+except KeyError:
+    raise RuntimeError("Missing required environment variable: GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
 
 EVAL_SYSTEM_PROMPT = """
 You are an intelligent evaluation system whose task is to assess an AI assistant's answer.
@@ -48,7 +52,7 @@ def create_embeddings(text: list[str], model="text-embedding-004"):
 
 
 def refined_question_response(question: str, chat_history: list[dict[str, str]], model="gemini-2.0-flash") -> types.GenerateContentResponse:
-    chat_history = "\n".join(f"{message['role']}: {message['content']}" for message in chat_history)
+    chat_history = "\n".join(f"{message['role']}: {message['content_mod']}" if message["role"] == "user" else f"{message['role']}: {message['content']}" for message in chat_history)
 
     response = client.models.generate_content(
         model=model,
@@ -101,9 +105,6 @@ def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, mod
             system_instruction=EVAL_SYSTEM_PROMPT,
             response_mime_type="application/json",
             response_schema=EvalResponse,
-            temperature=0.7,
-            top_p=0.9,
-            top_k=40,
             max_output_tokens=512,
         ),
         contents=f"Question: {question}\nAI assistant's answer: {ai_answer}\nIdeal answer: {ideal_answer}",
