@@ -110,7 +110,8 @@ def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, mod
             system_instruction=EVAL_SYSTEM_PROMPT,
             response_mime_type="application/json",
             response_schema=EvalResponse,
-            max_output_tokens=512,
+            temperature=0.1,
+            max_output_tokens=256,
         ),
         contents=f"Question: {question}\nAI assistant's answer: {ai_answer}\nIdeal answer: {ideal_answer}",
     )
