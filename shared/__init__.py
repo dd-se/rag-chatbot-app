@@ -22,6 +22,7 @@ from .genai import (
     generate_eval_response,
     refined_question_response,
 )
+from .logging_helper import get_logger
 from .models import EvalResponse, QAItem, qa_list_adapter
 from .parse_pdf import chunk_text, load_pdf_data
 
