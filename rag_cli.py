@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from shared import *
 
+logger = get_logger(__name__)
+DOC_PROCESSED = "Document processed."
+DOC_ALREADY_PROCESSED = "Document already processed."
+ANSWER = "Answer:"
+DOC_NOT_FOUND = "Document not found in the database. Please add it first using the 'add' command."
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="RAG Chatbot CLI")
@@ -25,25 +31,24 @@ def main():
     with open(args.pdf, "rb") as doc:
         doc_hash = get_document_hash(doc)
         in_db = is_in_db(doc_hash)
-
         if args.command == "add":
             if not in_db:
                 text = load_pdf_data(doc)
                 chunks = chunk_text(text)
-                process_and_store_document_chunks(chunks, Path(args.pdf).name, doc_hash)
-                print("Document processed.")
+                fname = f"{Path(args.pdf).name}-{random_letters()}"
+                process_and_store_document_chunks(chunks, fname, doc_hash)
+                logger.info(DOC_PROCESSED)
             else:
-                print("Document already processed.", args.pdf)
+                logger.info(DOC_ALREADY_PROCESSED)
 
         elif args.command == "query":
             if in_db:
                 query_embedding = create_embeddings([args.question]).embeddings[0].values
                 top_chunks = get_relevant_context(query_embedding, doc_hash)["documents"][0]
                 response = context_aware_response(args.question, top_chunks).text
-                print("Answer:", response)
+                logger.info(ANSWER, response)
             else:
-                print(f"Embeddings for {args.pdf} not found.")
-
+                logger.info(DOC_NOT_FOUND)
         elif args.command == "eval":
             if in_db:
                 with open(args.validation_data, encoding="utf-8") as f:
@@ -62,11 +67,11 @@ def main():
 
                         eval: EvalResponse = generate_eval_response(question, response, ideal_answer).parsed
                         eval.question = question
-                        eval.context = Path(args.pdf).name
+                        eval.context = next(k for k, v in current_docs.items() if v == doc_hash)
                         eval.hash = doc_hash
                         writer.writerow(eval.model_dump())
             else:
-                print(f"Embeddings for {args.pdf} are not found.")
+                logger.info(DOC_NOT_FOUND)
 
 
 if __name__ == "__main__":
