@@ -73,7 +73,6 @@ def process_pdf_or_json_file():
                     if doc_hash:
                         current_docs[fname] = doc_hash
                         st.toast("Document processed.", icon="ℹ️")
-
             else:
                 st.toast("Document already processed.", icon="ℹ️")
         else:
@@ -82,9 +81,9 @@ def process_pdf_or_json_file():
 
 
 st.sidebar.file_uploader(
-    label="Select a file to upload...",
-    key="file",
+    "Select a file to upload...",
     type=["pdf", "json"],
+    key="file",
     help="Upload a PDF document and start ask questions about its content.  \
         \n Upload a Questions & Answers file in JSON format to evaluate the AI-Assistant.",
     on_change=process_pdf_or_json_file,
@@ -93,31 +92,32 @@ st.sidebar.file_uploader(
 st.session_state.doc_name = st.sidebar.radio(
     "Select a document to use as context:",
     current_docs.keys(),
-    help="Choose one of the processed documents.  \nYour questions will be answered based on the selected document content.",
+    help="Choose one of the processed documents.  \
+        \nYour questions will be answered based on the selected document content.",
 )
 st.session_state.doc_hash = current_docs.get(st.session_state.doc_name)
 
 
 evaluate_button, qa_results_button = st.sidebar.columns(2)
-# Enable the evaluation button when qa_list is also defined
 evaluate_button.button(
     "Evaluate AI",
-    on_click=evaluate_ai,
     help="Upload a valid QA file to enable this button",
-    disabled=any((st.session_state.doc_hash is None, st.session_state.qa_list is None)),
+    on_click=evaluate_ai,
     kwargs={"data": st.session_state.qa_list},
+    disabled=any((st.session_state.doc_hash is None, st.session_state.qa_list is None)),
     use_container_width=True,
 )
-# Enable the QA results button when we have results
+
 qa_results_button.button(
     "QA Results",
     key="qa_button_pressed",
+    help="Click to display evaluation results after running 'Evaluate AI'.",
     on_click=display_qa_results,
-    use_container_width=True,
     kwargs={"data": st.session_state.eval_results},
     disabled=not st.session_state.eval_results,
+    use_container_width=True,
 )
-# Accept user input if doc_hash is defined
+# Accept user input when doc_hash is defined
 prompt = st.chat_input(
     disabled=st.session_state.doc_hash is None,
 )
