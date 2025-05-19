@@ -16,5 +16,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "deepeval>=2.9.3",
     "ipykernel>=6.29.5",
 ]

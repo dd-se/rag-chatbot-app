@@ -6,9 +6,9 @@ dist/
 wheels/
 *.egg-info
 .env
-# Virtual environments
+.deepeval/
 .venv
 chroma_*
-old
-.vscode
+old/
+.vscode/
 /*.pdf

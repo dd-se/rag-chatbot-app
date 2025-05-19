@@ -16,6 +16,7 @@ from .db import (
     random_letters,
 )
 from .genai import (
+    client,
     context_aware_response,
     context_aware_response_stream,
     create_embeddings,
