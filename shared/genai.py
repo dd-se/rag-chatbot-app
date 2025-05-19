@@ -90,7 +90,7 @@ def context_aware_response(question: str, context: list[str], model="gemini-2.0-
             temperature=0.7,
             top_p=0.9,
             top_k=40,
-            max_output_tokens=512,
+            max_output_tokens=1024,
         ),
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
     )
@@ -108,7 +108,7 @@ def context_aware_response_stream(question: str, context: list[str], model="gemi
             temperature=0.7,
             top_p=0.9,
             top_k=40,
-            max_output_tokens=512,
+            max_output_tokens=1024,
         ),
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
     )

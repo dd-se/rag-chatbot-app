@@ -21,6 +21,6 @@ def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> list[st
     chunks = []
     for i in range(0, len(text), chunk_size - overlap):
         chunks.append(text[i : i + chunk_size])
-    logger.debug(f"{len(text) =  } | {chunks = } | {chunk_size = } | {overlap = }")
+    logger.debug(f"{len(text) =  } | {len(chunks) = } | {chunk_size = } | {overlap = }")
     logger.info("Text splitted into chunks successfully.")
     return chunks
