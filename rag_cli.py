@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from shared import *
 
-logger = get_logger(__name__)
 DOC_PROCESSED = "Document processed."
 DOC_ALREADY_PROCESSED = "Document already processed."
 ANSWER = "Answer:"
 DOC_NOT_FOUND = "Document not found in the database. Please add it first using the 'add' command."
+
+logger = get_logger(__name__)
 
 
 def parse_args():
@@ -46,7 +47,7 @@ def main():
                 query_embedding = create_embeddings([args.question]).embeddings[0].values
                 top_chunks = get_relevant_context(query_embedding, doc_hash)["documents"][0]
                 response = context_aware_response(args.question, top_chunks).text
-                logger.info(ANSWER, response)
+                logger.info(f"{ANSWER}: {response}")
             else:
                 logger.info(DOC_NOT_FOUND)
         elif args.command == "eval":
