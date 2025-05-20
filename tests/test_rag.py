@@ -23,7 +23,7 @@ with open("example/test.pdf", "rb") as f:
 
 @pytest.mark.parametrize("qa", qa_list)
 def test_rag(qa: QAItem):
-    embedding = create_embeddings([qa.question]).embeddings[0].values
+    embedding = create_embeddings([qa.question])[0].values
     top_chunks = get_relevant_context(embedding, doc_hash)["documents"][0]
     response = context_aware_response(qa.question, top_chunks).text
 

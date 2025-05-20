@@ -58,7 +58,7 @@ def process_and_store_document_chunks(chunks: list[str], filename: str, doc_hash
     for i, chunk in enumerate(chunks):
         collection.add(
             documents=[chunk],
-            embeddings=[embeddings.embeddings[i].values],
+            embeddings=[embeddings[i].values],
             metadatas=[{"source": filename, "chunk_id": i, "hash": doc_hash}],
             ids=[f"{doc_hash}_{i}"],
         )

@@ -44,7 +44,7 @@ def main():
 
         elif args.command == "query":
             if in_db:
-                query_embedding = create_embeddings([args.question]).embeddings[0].values
+                query_embedding = create_embeddings([args.question])[0].values
                 top_chunks = get_relevant_context(query_embedding, doc_hash)["documents"][0]
                 response = context_aware_response(args.question, top_chunks).text
                 logger.info(f"{ANSWER}: {response}")
@@ -62,7 +62,7 @@ def main():
                         question = item.question
                         ideal_answer = item.ideal_answer
 
-                        query_embedding = create_embeddings([question]).embeddings[0].values
+                        query_embedding = create_embeddings([question])[0].values
                         top_chunks = get_relevant_context(query_embedding, doc_hash)["documents"][0]
                         response = context_aware_response(question, top_chunks).text
 

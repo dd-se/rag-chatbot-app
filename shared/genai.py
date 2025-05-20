@@ -56,9 +56,20 @@ Standalone question:
 """
 
 
-def create_embeddings(text: list[str], model="text-embedding-004"):
-    logger.debug(f"{len(text) = } | {model = }")
-    return client.models.embed_content(model=model, contents=text, config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"))
+def create_embeddings(chunks: list[str], model="text-embedding-004"):
+    # Split into chunks of 100 as Google only allows 100 maximum per request
+    logger.debug(f"{len(chunks) = } | {model = }")
+    chunks: list[list[str]] = [chunks[i : i + 100] for i in range(0, len(chunks), 100)]
+    all_embeddings = []
+    for i, chunk in enumerate(chunks, 1):
+        embeddings = client.models.embed_content(
+            model=model,
+            contents=chunk,
+            config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"),
+        ).embeddings
+        all_embeddings.extend(embeddings)
+        logger.info(f"Batch {i} processed ({len(embeddings)})")
+    return all_embeddings
 
 
 def refined_question_response(question: str, chat_history: list[dict[str, str]], model="gemini-2.0-flash") -> types.GenerateContentResponse:

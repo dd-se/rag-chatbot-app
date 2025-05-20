@@ -46,7 +46,7 @@ def evaluate_ai(data: list[QAItem]):
         question = qa_item.question
         ideal_answer = qa_item.ideal_answer
         # Get relevant chunks using similarity search
-        query_embedding = create_embeddings([question]).embeddings[0].values
+        query_embedding = create_embeddings([question])[0].values
         top_chunks = get_relevant_context(query_embedding, st.session_state.doc_hash)["documents"][0]
         # Get a response from the AI-Assistant
         response = context_aware_response(question, top_chunks).text
@@ -137,7 +137,7 @@ if prompt:
     if st.session_state.messages:
         refined_prompt = refined_question_response(prompt, st.session_state.messages).text
     prompt_potentially_enhanced = locals().get("refined_prompt") or prompt
-    query_embedding = create_embeddings([prompt_potentially_enhanced]).embeddings[0].values
+    query_embedding = create_embeddings([prompt_potentially_enhanced])[0].values
     top_chunks = get_relevant_context(query_embedding, doc_hash=st.session_state.doc_hash)["documents"][0]
 
     with st.chat_message("assistant"):
