@@ -94,6 +94,13 @@ st.session_state.doc_name = st.sidebar.radio(
     current_docs.keys(),
     help="Choose one of the processed documents.  \
         \nYour questions will be answered based on the selected document content.",
+    on_change=lambda: (
+        st.session_state.messages.clear(),
+        st.toast(
+            "Context changed. Chat history reset.",
+            icon="ℹ️",
+        ),
+    ),
 )
 st.session_state.doc_hash = current_docs.get(st.session_state.doc_name)
 
