@@ -59,16 +59,18 @@ Standalone question:
 def create_embeddings(chunks: list[str], model="text-embedding-004"):
     # Split into chunks of 100 as Google only allows 100 maximum per request
     logger.debug(f"{len(chunks) = } | {model = }")
-    chunks: list[list[str]] = [chunks[i : i + 100] for i in range(0, len(chunks), 100)]
+    batch_number = 1
     all_embeddings = []
-    for i, chunk in enumerate(chunks, 1):
+    for i in range(0, len(chunks), 100):
+        batch = chunks[i : i + 100]
         embeddings = client.models.embed_content(
             model=model,
-            contents=chunk,
+            contents=batch,
             config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"),
         ).embeddings
         all_embeddings.extend(embeddings)
-        logger.info(f"Batch {i} processed ({len(embeddings)})")
+        logger.info(f"Batch {batch_number} processed ({len(embeddings)})")
+        batch_number += 1
     return all_embeddings
 
 
