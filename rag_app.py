@@ -23,8 +23,7 @@ if "eval_results" not in st.session_state:
     st.session_state.eval_results = []
 
 
-@st.cache_data
-def display_chat_history(messages: list[str], noop: bool = False):
+def display_chat_history(messages: list[dict], noop: bool = False):
     if noop:
         return
     for message in messages:
@@ -32,11 +31,15 @@ def display_chat_history(messages: list[str], noop: bool = False):
             st.markdown(message["content"])
 
 
-@st.cache_data
-def display_qa_results(data: list[dict] | pd.DataFrame):
+def display_qa_results(data: list[dict]):
     """Present the results in tabular form"""
-    st.header("Results")
-    st.dataframe(data, use_container_width=True)
+    st.write("## Results")
+    st.dataframe(
+        data,
+        use_container_width=True,
+        column_config={"score": st.column_config.ProgressColumn(format="plain")},
+    )
+    st.write("### Evaluation Score:", round(sum(r["score"] for r in data) / len(data), 2))
 
 
 def evaluate_ai(data: list[QAItem]):
@@ -104,7 +107,6 @@ st.session_state.doc_name = st.sidebar.radio(
 )
 st.session_state.doc_hash = current_docs.get(st.session_state.doc_name)
 
-
 evaluate_button, qa_results_button = st.sidebar.columns(2)
 evaluate_button.button(
     "Evaluate AI",
@@ -123,6 +125,12 @@ qa_results_button.button(
     kwargs={"data": st.session_state.eval_results},
     disabled=not st.session_state.eval_results,
     use_container_width=True,
+)
+
+st.sidebar.button(
+    "Display Chat History",
+    use_container_width=True,
+    disabled=not st.session_state.messages,
 )
 # Accept user input when doc_hash is defined
 prompt = st.chat_input(

@@ -8,7 +8,7 @@
         "ideal_answer": "I don't know."
     },
     {
-        "question": "Who is Andrew NG?",
-        "ideal_answer":"Andrew NG is the founder of DeepLearning.AI"
+        "question": "Who is Andrew?",
+        "ideal_answer":"Andrew Ng is the founder of DeepLearning.AI."
     }
 ]

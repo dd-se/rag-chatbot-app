@@ -3,7 +3,7 @@ from shared import *
 
 DOC_PROCESSED = "Document processed."
 DOC_ALREADY_PROCESSED = "Document already processed."
-ANSWER = "Answer:"
+ANSWER = "Answer"
 DOC_NOT_FOUND = "Document not found in the database. Please add it first using the 'add' command."
 
 logger = get_logger(__name__)

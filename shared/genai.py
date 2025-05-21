@@ -10,12 +10,10 @@ from .logging_helper import get_logger
 from .models import EvalResponse
 
 load_dotenv()
-try:
-    api_key = os.environ["GEMINI_API_KEY"]
-except KeyError:
+api_key = os.getenv("GEMINI_API_KEY")
+if api_key is None:
     raise RuntimeError("Missing required environment variable: GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
-
 logger = get_logger(__name__)
 cutoff = slice(0, 50)
 
@@ -56,13 +54,13 @@ Standalone question:
 """
 
 
-def create_embeddings(chunks: list[str], model="text-embedding-004"):
+def create_embeddings(chunks: list[str], batch_size: int = 100, model="text-embedding-004"):
     # Split into chunks of 100 as Google only allows 100 maximum per request
     logger.debug(f"{len(chunks) = } | {model = }")
     batch_number = 1
     all_embeddings = []
-    for i in range(0, len(chunks), 100):
-        batch = chunks[i : i + 100]
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i : i + batch_size]
         embeddings = client.models.embed_content(
             model=model,
             contents=batch,
@@ -76,7 +74,7 @@ def create_embeddings(chunks: list[str], model="text-embedding-004"):
 
 def refined_question_response(question: str, chat_history: list[dict[str, str]], model="gemini-2.0-flash") -> types.GenerateContentResponse:
     logger.debug(f"{question[cutoff] = } | {len(chat_history) = } | {model = }")
-    chat_history = "\n".join(f"{message['role']}: {message['content_mod']}" if message["role"] == "user" else f"{message['role']}: {message['content']}" for message in chat_history)
+    chat_history = "\n".join(f"{m['role']}: {m['content_mod']}" if m["role"] == "user" else f"{m['role']}: {m['content']}" for m in chat_history)
 
     response = client.models.generate_content(
         model=model,
@@ -100,9 +98,6 @@ def context_aware_response(question: str, context: list[str], model="gemini-2.0-
         model=model,
         config=types.GenerateContentConfig(
             system_instruction=CONTEXT_SYSTEM_PROMPT,
-            temperature=0.7,
-            top_p=0.9,
-            top_k=40,
             max_output_tokens=1024,
         ),
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
@@ -118,9 +113,6 @@ def context_aware_response_stream(question: str, context: list[str], model="gemi
         model=model,
         config=types.GenerateContentConfig(
             system_instruction=CONTEXT_SYSTEM_PROMPT,
-            temperature=0.7,
-            top_p=0.9,
-            top_k=40,
             max_output_tokens=1024,
         ),
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),

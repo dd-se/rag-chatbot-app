@@ -40,12 +40,10 @@ def is_in_db(doc_hash: str):
 def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 7):
     """Retrieves relevant document chunks having a specific hash"""
     logger.debug(f"{len(query_embedding)= } | {k = } | {doc_hash = }")
-    where_clause = {"hash": doc_hash} if doc_hash else None
-
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=k,
-        where=where_clause,
+        where={"hash": doc_hash} if doc_hash else None,
     )
     logger.info("Context retrieved successfully from document store.")
     return results

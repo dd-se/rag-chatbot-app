@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 
 from pypdf import PdfReader
 
@@ -7,7 +8,7 @@ from .logging_helper import get_logger
 logger = get_logger(__name__)
 
 
-def load_pdf_data(content: io.BufferedReader):
+def load_pdf_data(content: io.BufferedReader | Path):
     logger.debug(f"{content.name = }")
     reader = PdfReader(content)
     text = ""
