@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-from typing import Iterator
+from typing import Iterator, Literal
 
 from dotenv import load_dotenv
 from google import genai
@@ -54,7 +54,12 @@ Standalone question:
 """
 
 
-def create_embeddings(chunks: list[str], batch_size: int = 100, model="text-embedding-004"):
+def create_embeddings(
+    chunks: list[str],
+    task_type: Literal["SEMANTIC_SIMILARITY", "RETRIEVAL_DOCUMENT", "RETRIEVAL_QUERY"] = "SEMANTIC_SIMILARITY",
+    batch_size: int = 100,
+    model: str = "text-embedding-004",
+):
     # Split into chunks of 100 as Google only allows 100 maximum per request
     logger.debug(f"{len(chunks) = } | {model = }")
     batch_number = 1
@@ -64,7 +69,7 @@ def create_embeddings(chunks: list[str], batch_size: int = 100, model="text-embe
         embeddings = client.models.embed_content(
             model=model,
             contents=batch,
-            config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"),
+            config=types.EmbedContentConfig(task_type=task_type),
         ).embeddings
         all_embeddings.extend(embeddings)
         logger.info(f"Batch {batch_number} processed ({len(embeddings)})")
@@ -72,33 +77,37 @@ def create_embeddings(chunks: list[str], batch_size: int = 100, model="text-embe
     return all_embeddings
 
 
-def refined_question_response(question: str, chat_history: list[dict[str, str]], model="gemini-2.0-flash") -> types.GenerateContentResponse:
+def refined_question_response(
+    question: str,
+    chat_history: list[dict[str, str]],
+    model="gemini-2.0-flash",
+) -> types.GenerateContentResponse:
     logger.debug(f"{question[cutoff] = } | {len(chat_history) = } | {model = }")
     chat_history = "\n".join(f"{m['role']}: {m['content_mod']}" if m["role"] == "user" else f"{m['role']}: {m['content']}" for m in chat_history)
-
     response = client.models.generate_content(
         model=model,
-        config=types.GenerateContentConfig(
-            system_instruction=REFINED_QUESTION_SYSTEM_PROMPT,
-            temperature=0.7,
-            top_p=0.9,
-            top_k=40,
-            max_output_tokens=512,
-        ),
+        config=types.GenerateContentConfig(system_instruction=REFINED_QUESTION_SYSTEM_PROMPT),
         contents=REFINED_QUESTION_PROMPT_TEMPLATE.format(chat_history=chat_history, question=question),
     )
-    logger.info("Response generated successfully.")
     logger.debug(f"Refined question response: {response.text.strip('\n')}")
+    logger.info("Response generated successfully.")
     return response
 
 
-def context_aware_response(question: str, context: list[str], model="gemini-2.0-flash") -> types.GenerateContentResponse:
+def context_aware_response(
+    question: str,
+    context: list[str],
+    temperature: float = 1.0,
+    max_output_tokens: int = 1024,
+    model="gemini-2.0-flash",
+) -> types.GenerateContentResponse:
     logger.debug(f"{question[cutoff] = } | {len(context) = } | {model = }")
     response = client.models.generate_content(
         model=model,
         config=types.GenerateContentConfig(
             system_instruction=CONTEXT_SYSTEM_PROMPT,
-            max_output_tokens=1024,
+            temperature=temperature,
+            max_output_tokens=max_output_tokens,
         ),
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
     )
@@ -107,13 +116,20 @@ def context_aware_response(question: str, context: list[str], model="gemini-2.0-
     return response
 
 
-def context_aware_response_stream(question: str, context: list[str], model="gemini-2.0-flash") -> Iterator[types.GenerateContentResponse]:
+def context_aware_response_stream(
+    question: str,
+    context: list[str],
+    temperature: float = 1.0,
+    max_output_tokens: int = 1024,
+    model="gemini-2.0-flash",
+) -> Iterator[types.GenerateContentResponse]:
     logger.debug(f"{question[cutoff] = } | {len(context) = } | {model = }")
     stream = client.models.generate_content_stream(
         model=model,
         config=types.GenerateContentConfig(
             system_instruction=CONTEXT_SYSTEM_PROMPT,
-            max_output_tokens=1024,
+            temperature=temperature,
+            max_output_tokens=max_output_tokens,
         ),
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
     )
@@ -121,7 +137,14 @@ def context_aware_response_stream(question: str, context: list[str], model="gemi
     return stream
 
 
-def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, model="gemini-2.0-flash") -> types.GenerateContentResponse:
+def generate_eval_response(
+    question: str,
+    ai_answer: str,
+    ideal_answer: str,
+    temperature: float = 0.1,
+    max_output_tokens: int = 1024,
+    model="gemini-2.0-flash-lite",
+) -> types.GenerateContentResponse:
     logger.debug(f"{question[cutoff] = } | {ai_answer[cutoff] = } | {ideal_answer[cutoff] = } | {model = }")
     response = client.models.generate_content(
         model=model,
@@ -129,8 +152,8 @@ def generate_eval_response(question: str, ai_answer: str, ideal_answer: str, mod
             system_instruction=EVAL_SYSTEM_PROMPT,
             response_mime_type="application/json",
             response_schema=EvalResponse,
-            temperature=0.1,
-            max_output_tokens=256,
+            temperature=temperature,
+            max_output_tokens=max_output_tokens,
         ),
         contents=f"Question: {question}\nAI assistant's answer: {ai_answer}\nIdeal answer: {ideal_answer}",
     )

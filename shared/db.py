@@ -37,7 +37,7 @@ def is_in_db(doc_hash: str):
     return in_db
 
 
-def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 7):
+def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 5):
     """Retrieves relevant document chunks having a specific hash"""
     logger.debug(f"{len(query_embedding)= } | {k = } | {doc_hash = }")
     results = collection.query(
