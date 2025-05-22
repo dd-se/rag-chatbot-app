@@ -9,6 +9,7 @@ import pandas as pd
 from .db import (
     collection,
     current_docs,
+    delete_document,
     get_document_hash,
     get_relevant_context,
     is_in_db,

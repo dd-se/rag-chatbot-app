@@ -37,6 +37,13 @@ def is_in_db(doc_hash: str):
     return in_db
 
 
+def delete_document(doc_name: str, doc_hash: str):
+    """Deletes all document chunks with the given hash from the collection."""
+    collection.delete(where={"hash": doc_hash})
+    del current_docs[doc_name]
+    logger.info(f"Document {doc_name} with hash {doc_hash} deleted from store.")
+
+
 def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 5):
     """Retrieves relevant document chunks having a specific hash"""
     logger.debug(f"{len(query_embedding)= } | {k = } | {doc_hash = }")
