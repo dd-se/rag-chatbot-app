@@ -37,7 +37,8 @@ def display_qa_results(data: list[dict]):
     st.dataframe(
         data,
         use_container_width=True,
-        column_config={"score": st.column_config.ProgressColumn(format="plain")},
+        hide_index=False,
+        column_config={"score": st.column_config.ProgressColumn(width="small", format="plain")},
     )
     st.write("### Evaluation Score:", round(sum(r["score"] for r in data) / len(data), 2))
 
@@ -54,6 +55,7 @@ def evaluate_ai(data: list[QAItem]):
         top_chunks = get_relevant_context(
             query_embedding,
             st.session_state.doc_hash,
+            st.session_state.k_chunks,
         )["documents"][0]
         # Get a response from the AI-Assistant
         response = context_aware_response(
@@ -67,6 +69,8 @@ def evaluate_ai(data: list[QAItem]):
             question,
             response,
             ideal_answer,
+            st.session_state.temperature,
+            st.session_state.max_tokens,
         ).parsed
         eval.question = question
         eval.context = st.session_state.doc_name
@@ -119,13 +123,29 @@ st.session_state.doc_name = st.sidebar.radio(
     ),
 )
 st.session_state.doc_hash = current_docs.get(st.session_state.doc_name)
-
+st.sidebar.button(
+    "Delete document",
+    on_click=delete_document,
+    args=(st.session_state.doc_hash, st.session_state.doc_name),
+    disabled=not st.session_state.doc_hash,
+    use_container_width=True,
+    type="primary",
+)
+st.sidebar.number_input(
+    "K Chunks",
+    min_value=1,
+    max_value=10,
+    value=5,
+    key="k_chunks",
+    help="Number of relevant chunks to retrieve from the vector store for context.",
+    step=1,
+)
 col_1, col_2 = st.sidebar.columns(2)
 col_1.button(
     "Evaluate AI",
     help="Upload a valid QA file to enable this button",
     on_click=evaluate_ai,
-    kwargs={"data": st.session_state.qa_list},
+    args=(st.session_state.qa_list,),
     disabled=any((st.session_state.doc_hash is None, st.session_state.qa_list is None)),
     use_container_width=True,
 )
@@ -135,6 +155,7 @@ col_1.button(
         st.session_state.messages.clear(),
         st.toast("Chat history reset.", icon="ℹ️"),
     ),
+    type="primary",
     use_container_width=True,
 )
 col_2.button(
@@ -142,20 +163,18 @@ col_2.button(
     key="qa_button_pressed",
     help="Click to display evaluation results after running 'Evaluate AI'.",
     on_click=display_qa_results,
-    kwargs={"data": st.session_state.eval_results},
+    args=(st.session_state.eval_results,),
     disabled=not st.session_state.eval_results,
     use_container_width=True,
 )
-col_2.button(
-    "Display Chat History",
-    use_container_width=True,
-)
+col_2.button("Display Chat History", use_container_width=True)
+
 # https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/content-generation-parameters#temperature
 st.sidebar.slider(
     "Temperature",
     min_value=0.0,
     max_value=2.0,
-    value=1.0,
+    value=0.7,
     help="Lower temperatures lead to more predictable results.",
     key="temperature",
     step=0.1,
@@ -169,30 +188,40 @@ st.sidebar.slider(
     key="max_tokens",
     step=512,
 )
+st.sidebar.checkbox(
+    "Refine prompt using chat history",
+    value=False,
+    key="refine_prompt",
+    help="If enabled, the assistant will attempt to improve your question using recent chat history.",
+)
 # Accept user input when doc_hash is defined
 prompt = st.chat_input(disabled=st.session_state.doc_hash is None)
 display_chat_history(st.session_state.messages, st.session_state.qa_button_pressed)
 if prompt:
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    if st.session_state.messages:
+    if st.session_state.messages and st.session_state.refine_prompt:
         # Refine user question using recent chat history
-        refined_prompt = refined_question_response(prompt, st.session_state.messages[-4:]).text
-    prompt_potentially_enhanced = locals().get("refined_prompt") or prompt
-    query_embedding = create_embeddings([prompt_potentially_enhanced])[0].values
-    top_chunks = get_relevant_context(query_embedding, doc_hash=st.session_state.doc_hash)["documents"][0]
+        star = "⭐"
+        prompt = refined_question_response(prompt, st.session_state.messages[-4:]).text
+
+    with st.chat_message("user"):
+        st.write(prompt, locals().get("star", ""))
+
+    query_embedding = create_embeddings([prompt])[0].values
+    top_chunks = get_relevant_context(
+        query_embedding,
+        st.session_state.doc_hash,
+        st.session_state.k_chunks,
+    )["documents"][0]
 
     with st.chat_message("assistant"):
         response = st.write_stream(
             chunk.text
             for chunk in context_aware_response_stream(
-                prompt_potentially_enhanced,
+                prompt,
                 top_chunks,
                 st.session_state.temperature,
                 st.session_state.max_tokens,
             )
         )
-
-    st.session_state.messages.append({"role": "user", "content": prompt, "content_mod": prompt_potentially_enhanced})
+    st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": response})

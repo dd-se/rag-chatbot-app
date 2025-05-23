@@ -10,6 +10,7 @@ from .db import (
     collection,
     current_docs,
     delete_document,
+    get_doc_name_by_hash,
     get_document_hash,
     get_relevant_context,
     is_in_db,

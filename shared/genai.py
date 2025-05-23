@@ -15,7 +15,7 @@ if api_key is None:
     raise RuntimeError("Missing required environment variable: GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 logger = get_logger(__name__)
-cutoff = slice(0, 50)
+cut = slice(0, 50)
 
 EVAL_SYSTEM_PROMPT = """
 You are an impartial evaluation system. Your task is to assess the AI assistant's answer compared to the ideal answer.
@@ -82,8 +82,8 @@ def refined_question_response(
     chat_history: list[dict[str, str]],
     model="gemini-2.0-flash",
 ) -> types.GenerateContentResponse:
-    logger.debug(f"{question[cutoff] = } | {len(chat_history) = } | {model = }")
-    chat_history = "\n".join(f"{m['role']}: {m['content_mod']}" if m["role"] == "user" else f"{m['role']}: {m['content']}" for m in chat_history)
+    logger.debug(f"{question[cut] = } | {len(chat_history) = } | {model = }")
+    chat_history = "\n\n".join(f"{m['role']}: {m['content']}" for m in chat_history)
     response = client.models.generate_content(
         model=model,
         config=types.GenerateContentConfig(system_instruction=REFINED_QUESTION_SYSTEM_PROMPT),
@@ -97,11 +97,11 @@ def refined_question_response(
 def context_aware_response(
     question: str,
     context: list[str],
-    temperature: float = 1.0,
+    temperature: float = 0.7,
     max_output_tokens: int = 1024,
     model="gemini-2.0-flash",
 ) -> types.GenerateContentResponse:
-    logger.debug(f"{question[cutoff] = } | {len(context) = } | {model = }")
+    logger.debug(f"{question[cut] = } | {len(context) = } | {model = }")
     response = client.models.generate_content(
         model=model,
         config=types.GenerateContentConfig(
@@ -112,18 +112,17 @@ def context_aware_response(
         contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
     )
     logger.info("Response generated successfully.")
-    logger.debug(f"Response: {response.text[cutoff]}")
     return response
 
 
 def context_aware_response_stream(
     question: str,
     context: list[str],
-    temperature: float = 1.0,
+    temperature: float = 0.7,
     max_output_tokens: int = 1024,
     model="gemini-2.0-flash",
 ) -> Iterator[types.GenerateContentResponse]:
-    logger.debug(f"{question[cutoff] = } | {len(context) = } | {model = }")
+    logger.debug(f"{question[cut] = } | {len(context) = } | {model = }")
     stream = client.models.generate_content_stream(
         model=model,
         config=types.GenerateContentConfig(
@@ -141,11 +140,11 @@ def generate_eval_response(
     question: str,
     ai_answer: str,
     ideal_answer: str,
-    temperature: float = 0.1,
+    temperature: float = 0.7,
     max_output_tokens: int = 1024,
     model="gemini-2.0-flash-lite",
 ) -> types.GenerateContentResponse:
-    logger.debug(f"{question[cutoff] = } | {ai_answer[cutoff] = } | {ideal_answer[cutoff] = } | {model = }")
+    logger.debug(f"{question[cut] = } | {ai_answer[cut] = } | {ideal_answer[cut] = } | {model = }")
     response = client.models.generate_content(
         model=model,
         config=types.GenerateContentConfig(
@@ -157,6 +156,6 @@ def generate_eval_response(
         ),
         contents=f"Question: {question}\nAI assistant's answer: {ai_answer}\nIdeal answer: {ideal_answer}",
     )
-    logger.debug(f"{response.parsed.evaluation[cutoff]}... | Score: {response.parsed.score} ")
+    logger.debug(f"{response.parsed.evaluation[cut]}... | Score: {response.parsed.score} ")
     logger.info("Response generated successfully.")
     return response

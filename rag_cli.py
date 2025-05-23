@@ -68,7 +68,7 @@ def main():
 
                         eval: EvalResponse = generate_eval_response(question, response, ideal_answer).parsed
                         eval.question = question
-                        eval.context = next(k for k, v in current_docs.items() if v == doc_hash)
+                        eval.context = get_doc_name_by_hash(doc_hash)
                         eval.hash = doc_hash
                         writer.writerow(eval.model_dump())
             else:

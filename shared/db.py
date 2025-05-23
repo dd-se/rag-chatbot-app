@@ -37,9 +37,15 @@ def is_in_db(doc_hash: str):
     return in_db
 
 
-def delete_document(doc_name: str, doc_hash: str):
+def get_doc_name_by_hash(doc_hash: str):
+    return next(k for k, v in current_docs.items() if v == doc_hash)
+
+
+def delete_document(doc_hash: str, doc_name: str = None):
     """Deletes all document chunks with the given hash from the collection."""
     collection.delete(where={"hash": doc_hash})
+    if not doc_name:
+        doc_name = get_doc_name_by_hash(doc_hash)
     del current_docs[doc_name]
     logger.info(f"Document {doc_name} with hash {doc_hash} deleted from store.")
 
