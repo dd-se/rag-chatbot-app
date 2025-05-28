@@ -11,8 +11,8 @@ logger = get_logger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="RAG Chatbot CLI")
+    parser.add_argument("--chunks", dest="k_chunks", type=int, default=40, help="Maximum number of chunks to get from the vector store")
     subparsers = parser.add_subparsers(dest="command", required=True)
-
     add_parser = subparsers.add_parser("add", help="Add PDF to document store")
     add_parser.add_argument("pdf", type=str, help="PDF filename")
 
@@ -40,11 +40,10 @@ def main():
                 logger.info(DOC_PROCESSED)
             else:
                 logger.info(DOC_ALREADY_PROCESSED)
-
         elif args.command == "query":
             if in_db:
                 query_embedding = create_embeddings([args.question])[0].values
-                top_chunks = get_relevant_context(query_embedding, doc_hash)
+                top_chunks = get_relevant_context(query_embedding, doc_hash, args.k_chunks)
                 response = context_aware_response(args.question, top_chunks).text
                 logger.info(f"{ANSWER}:\n{response}")
             else:
@@ -57,17 +56,18 @@ def main():
                 with open(args.output, "w", newline="", encoding="utf-8") as f:
                     writer = csv.DictWriter(f, fieldnames=EvalResponse.model_fields.keys())
                     writer.writeheader()
+                    doc_name = get_doc_name_by_hash(doc_hash)
                     for item in validation_data:
                         question = item.question
                         ideal_answer = item.ideal_answer
 
                         query_embedding = create_embeddings([question])[0].values
-                        top_chunks = get_relevant_context(query_embedding, doc_hash)
+                        top_chunks = get_relevant_context(query_embedding, doc_hash, args.k_chunks)
                         response = context_aware_response(question, top_chunks).text
 
                         eval: EvalResponse = generate_eval_response(question, response, ideal_answer).parsed
                         eval.question = question
-                        eval.context = get_doc_name_by_hash(doc_hash)
+                        eval.context = doc_name
                         eval.hash = doc_hash
                         writer.writerow(eval.model_dump())
             else:
