@@ -34,8 +34,7 @@ def main():
         in_db = is_in_db(doc_hash)
         if args.command == "add":
             if not in_db:
-                text = load_pdf_data(doc)
-                chunks = chunk_text(text)
+                chunks = load_and_chunk_pdf_data(doc)
                 fname = f"{Path(args.pdf).name}-{random_letters()}"
                 process_and_store_document_chunks(chunks, fname, doc_hash)
                 logger.info(DOC_PROCESSED)
@@ -45,9 +44,9 @@ def main():
         elif args.command == "query":
             if in_db:
                 query_embedding = create_embeddings([args.question])[0].values
-                top_chunks = get_relevant_context(query_embedding, doc_hash)["documents"][0]
+                top_chunks = get_relevant_context(query_embedding, doc_hash)
                 response = context_aware_response(args.question, top_chunks).text
-                logger.info(f"{ANSWER}: {response}")
+                logger.info(f"{ANSWER}:\n{response}")
             else:
                 logger.info(DOC_NOT_FOUND)
         elif args.command == "eval":
@@ -63,7 +62,7 @@ def main():
                         ideal_answer = item.ideal_answer
 
                         query_embedding = create_embeddings([question])[0].values
-                        top_chunks = get_relevant_context(query_embedding, doc_hash)["documents"][0]
+                        top_chunks = get_relevant_context(query_embedding, doc_hash)
                         response = context_aware_response(question, top_chunks).text
 
                         eval: EvalResponse = generate_eval_response(question, response, ideal_answer).parsed

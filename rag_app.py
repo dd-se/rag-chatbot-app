@@ -3,7 +3,6 @@ import streamlit as st
 from shared import *
 
 st.set_page_config(layout="wide")
-st.sidebar.header("Conversational AI with Document Context")
 st.markdown(css, unsafe_allow_html=True)
 
 if "doc_name" not in st.session_state:
@@ -25,6 +24,10 @@ if "eval_results" not in st.session_state:
 
 def display_chat_history(messages: list[dict], noop: bool = False):
     if noop:
+        return
+    if not messages:
+        st.header("Conversational AI with Document Context")
+        st.write("Ask questions about your documents and get AI-powered answers.")
         return
     for message in messages:
         with st.chat_message(message["role"]):
@@ -56,7 +59,7 @@ def evaluate_ai(data: list[QAItem]):
             query_embedding,
             st.session_state.doc_hash,
             st.session_state.k_chunks,
-        )["documents"][0]
+        )
         # Get a response from the AI-Assistant
         response = context_aware_response(
             question,
@@ -86,8 +89,7 @@ def process_pdf_or_json_file():
             doc_hash = get_document_hash(file)
             if not is_in_db(doc_hash):
                 with st.spinner("Please wait...", show_time=True):
-                    text = load_pdf_data(file)
-                    chunks = chunk_text(text)
+                    chunks = load_and_chunk_pdf_data(file)
                     fname = f"{file.name}-{random_letters()}"
                     doc_hash = process_and_store_document_chunks(chunks, fname, doc_hash)
                     if doc_hash:
@@ -134,8 +136,8 @@ st.sidebar.button(
 st.sidebar.number_input(
     "K Chunks",
     min_value=1,
-    max_value=10,
-    value=5,
+    max_value=100,
+    value=40,
     key="k_chunks",
     help="Number of relevant chunks to retrieve from the vector store for context.",
     step=1,
@@ -167,7 +169,7 @@ col_2.button(
     disabled=not st.session_state.eval_results,
     use_container_width=True,
 )
-col_2.button("Display Chat History", use_container_width=True)
+col_2.button("Chat History", use_container_width=True)
 
 # https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/content-generation-parameters#temperature
 st.sidebar.slider(
@@ -179,11 +181,12 @@ st.sidebar.slider(
     key="temperature",
     step=0.1,
 )
+# Maximum output tokens: 8192  (https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-0-flash)
 st.sidebar.slider(
     "Max Output Tokens",
     min_value=512,
-    max_value=2048,
-    value=1024,
+    max_value=8192,
+    value=2048,
     help="Maximum number of tokens that can be generated in the response.",
     key="max_tokens",
     step=512,
@@ -211,7 +214,7 @@ if prompt:
         query_embedding,
         st.session_state.doc_hash,
         st.session_state.k_chunks,
-    )["documents"][0]
+    )
 
     with st.chat_message("assistant"):
         response = st.write_stream(
