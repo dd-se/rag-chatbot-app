@@ -1,0 +1,42 @@
+[
+    {
+        "question": "How far is the penalty spot from the goal line?",
+        "ideal_answer": "11 m (12 yds)."
+    },
+    {
+        "question": "What are the length and width dimensions of the field of play for international soccer matches?",
+        "ideal_answer": "For international matches the length (touchline) is a minimum of 100 m (110 yds) and a maximum of 110 m (120 yds). The length (goal line) is a minimum of 64 m (70 yds) and a maximum of 75 m (80 yds)."
+    },
+    {
+        "question": "Who is Andrew?",
+        "ideal_answer": "I don't know."
+    },
+    {
+        "question": "What is the maximum duration a goalkeeper is allowed to hold the ball, and what is the consequence if this time is exceeded?",
+        "ideal_answer": "A goalkeeper, inside their penalty area, cannot control the ball with the hand/arm for more than six seconds before releasing it. If they do, an indirect free kick is awarded."
+    },
+    {
+        "question": "How are non-deliberate handball offenses that result in penalties now treated under the updated laws?",
+        "ideal_answer": "When a penalty kick is awarded for a non-deliberate handball offence, the same philosophy should apply as for offences (fouls) which are an attempt to play the ball or a challenge for the ball. A player is cautioned if they deny the opposing team a goal or an obvious goal-scoring opportunity and the referee awards a penalty kick for a non-deliberate handball offence."
+    },
+    {
+        "question": "Under what conditions will player encroachment during a penalty kick be penalized according to the new guidelines?",
+        "ideal_answer": "Player encroachment during a penalty kick will be penalized only if it has an impact."
+    },
+    {
+        "question": "What are the revised guidelines for temporary dismissals, and when can a temporarily dismissed player return to play?",
+        "ideal_answer": "The revised guidelines for temporary dismissals specify that a temporarily dismissed player can return to the field of play only during a stoppage after the end of the temporary dismissal period, and system B has been simplified so that any two cautionable offences in the same match will result in the player being (permanently) sent off (RC). Also, 'handball' has been changed to 'deliberate handball' in the list of offences that might be suitable for a temporary dismissal if they stop or interfere with a promising attack (system B)."
+    },
+    {
+        "question": "What is the new requirement for the positioning of the ball on the penalty mark before a penalty kick is taken?",
+        "ideal_answer": "Part of the ball must touch or overhang the center of the penalty mark."
+    },
+    {
+        "question": "What changes have been made regarding the public announcement of VAR decisions by referees during matches?",
+        "ideal_answer": "The referee will announce and explain the final decision after a VAR 'review' or lengthy VAR 'check'."
+    },
+    {
+        "question": "What are the new stipulations regarding team captains and their identification on the field?",
+        "ideal_answer": "Each team must have a captain on the field of play who wears an identifying armband."
+    }
+]
