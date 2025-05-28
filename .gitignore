@@ -8,7 +8,7 @@ wheels/
 .env
 .deepeval/
 .venv
-chroma_*
+shared/vector_store/data*
 old/
 .vscode/
 /*.pdf

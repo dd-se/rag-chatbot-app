@@ -6,7 +6,18 @@ from time import sleep
 
 import pandas as pd
 
-from .db import (
+from .genai.genai_client import (
+    client,
+    context_aware_response,
+    context_aware_response_stream,
+    create_embeddings,
+    generate_eval_response,
+    refined_question_response,
+)
+from .genai.models import EvalResponse, QAItem, qa_list_adapter
+from .logging_helper import get_logger
+from .pdf_loader.chunker import fixed_size_chunker, load_and_chunk_pdf_data
+from .vector_store.db_client import (
     collection,
     current_docs,
     delete_document,
@@ -17,17 +28,6 @@ from .db import (
     process_and_store_document_chunks,
     random_letters,
 )
-from .genai import (
-    client,
-    context_aware_response,
-    context_aware_response_stream,
-    create_embeddings,
-    generate_eval_response,
-    refined_question_response,
-)
-from .logging_helper import get_logger
-from .models import EvalResponse, QAItem, qa_list_adapter
-from .parse_pdf import chunk_text, load_pdf_data
 
 bg_img_url = "https://i.imgur.com/6yLAgLv.jpeg"
 css = f"""

@@ -8,11 +8,11 @@ from typing import Any
 
 import chromadb
 
-from .genai import create_embeddings
-from .logging_helper import get_logger
+from ..genai.genai_client import create_embeddings
+from ..logging_helper import get_logger
 
 logger = get_logger(__name__)
-chroma_client = chromadb.PersistentClient(path=str(Path(__file__).parent / "chroma_db"))
+chroma_client = chromadb.PersistentClient(path=str(Path(__file__).parent / "data"))
 collection = chroma_client.get_or_create_collection("documents", metadata={"hnsw:space": "cosine"})
 current_docs = {m["source"]: m["hash"] for m in collection.get(include=["metadatas"])["metadatas"]}
 
@@ -50,16 +50,23 @@ def delete_document(doc_hash: str, doc_name: str = None):
     logger.info(f"Document {doc_name} with hash {doc_hash} deleted from store.")
 
 
-def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 5):
+def get_relevant_context(query_embedding: list[float], doc_hash: str = None, k: int = 5, sort_by_id: bool = False):
     """Retrieves relevant document chunks having a specific hash"""
     logger.debug(f"{len(query_embedding)= } | {k = } | {doc_hash = }")
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=k,
         where={"hash": doc_hash} if doc_hash else None,
+        include=["documents", "metadatas"],
     )
-    logger.info("Context retrieved successfully from document store.")
-    return results
+    logger.info("Context retrieved successfully.")
+    docs: list[str] = results["documents"][0]
+    if sort_by_id:
+        meta = results["metadatas"][0]
+        reranked = sorted(zip(docs, meta), key=lambda x: x[1]["chunk_id"])
+        docs = [doc for doc, _ in reranked]
+        logger.info("Sorted context successfully by chunk ID.")
+    return docs
 
 
 def process_and_store_document_chunks(chunks: list[str], filename: str, doc_hash: str):
@@ -73,5 +80,5 @@ def process_and_store_document_chunks(chunks: list[str], filename: str, doc_hash
             metadatas=[{"source": filename, "chunk_id": i, "hash": doc_hash}],
             ids=[f"{doc_hash}_{i}"],
         )
-    logger.info(f"{filename} added to document store.")
+    logger.info(f"{filename} added to the vector store.")
     return doc_hash

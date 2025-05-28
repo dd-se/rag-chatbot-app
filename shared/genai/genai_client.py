@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from .logging_helper import get_logger
+from ..logging_helper import get_logger
 from .models import EvalResponse
+from .prompts import *
 
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
@@ -16,42 +17,6 @@ if api_key is None:
 client = genai.Client(api_key=api_key)
 logger = get_logger(__name__)
 cut = slice(0, 50)
-
-EVAL_SYSTEM_PROMPT = """
-You are an impartial evaluation system. Your task is to assess the AI assistant's answer compared to the ideal answer.
-
-Scoring:
-- 1.0: The answer is very close to the ideal answer.
-- 0.5: The answer is partially correct or incomplete.
-- 0: The answer is incorrect or irrelevant.
-
-Assign only one of these scores (0, 0.5, or 1.0) and briefly justify your decision.
-"""
-
-CONTEXT_SYSTEM_PROMPT = """
-I will ask you a question, and I want you to answer
-based only on the context I provide, and no other information.
-If there is not enough information in the context to answer the question,
-say "I don't know". Do not try to guess."""
-CONTEXT_PROMPT_TEMPLATE = """
-Context information is below.
----------------------
-{context}
----------------------
-Given the context information and not prior knowledge, answer the question below:
-{question}
-"""
-
-REFINED_QUESTION_SYSTEM_PROMPT = """You are a helpful, respectful and honest assistant."""
-REFINED_QUESTION_PROMPT_TEMPLATE = """
-Chat History:
----------------------
-{chat_history}
----------------------
-Follow Up Question: {question}
-Given the above conversation and a follow up question, rephrase the follow up question to be a standalone question.
-Standalone question:
-"""
 
 
 def create_embeddings(
@@ -109,7 +74,7 @@ def context_aware_response(
             temperature=temperature,
             max_output_tokens=max_output_tokens,
         ),
-        contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
+        contents=CONTEXT_PROMPT_TEMPLATE.format(context="\n".join(context), question=question),
     )
     logger.info("Response generated successfully.")
     return response
@@ -130,7 +95,7 @@ def context_aware_response_stream(
             temperature=temperature,
             max_output_tokens=max_output_tokens,
         ),
-        contents=CONTEXT_PROMPT_TEMPLATE.format(context=" ".join(context), question=question),
+        contents=CONTEXT_PROMPT_TEMPLATE.format(context="\n".join(context), question=question),
     )
     logger.info("Response generated successfully.")
     return stream
