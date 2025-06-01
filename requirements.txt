@@ -90,7 +90,6 @@ httpx==0.28.1
     # via
     #   chromadb
     #   google-genai
-    #   ollama
 huggingface-hub==0.31.2
     # via tokenizers
 humanfriendly==10.0
@@ -140,8 +139,6 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
-ollama==0.4.8
-    # via rag-chatbot-cli (pyproject.toml)
 onnxruntime==1.22.0
     # via chromadb
 opentelemetry-api==1.33.0
@@ -221,7 +218,6 @@ pydantic==2.11.4
     #   chromadb
     #   fastapi
     #   google-genai
-    #   ollama
 pydantic-core==2.33.2
     # via pydantic
 pydeck==0.9.1
@@ -255,6 +251,8 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
+regex==2024.11.6
+    # via rag-chatbot-cli (pyproject.toml)
 requests==2.32.3
     # via
     #   google-genai
